@@ -222,7 +222,11 @@ import CTA from '../components/CTA.astro';
       <form id="newsletter-form" class="flex flex-col sm:flex-row gap-3 animate-on-scroll delay-2">
         <input type="email" name="email" required placeholder="Uw e-mailadres"
           class="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all outline-none" />
-        <input type="hidden" name="_gotcha" value="" />
+        <div aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden">
+          <label for="newsletter-gotcha">Laat dit veld leeg</label>
+          <input type="text" id="newsletter-gotcha" name="_gotcha" tabindex="-1" autocomplete="off" />
+        </div>
+        <input type="hidden" name="_ts" id="newsletter-ts" />
         <button type="submit" class="btn-primary justify-center whitespace-nowrap">
           Aanmelden
         </button>
@@ -256,13 +260,15 @@ import CTA from '../components/CTA.astro';
 <script>
   // Newsletter form
   const nlForm = document.getElementById('newsletter-form') as HTMLFormElement;
+  // Timing layer: the server flags submissions made within 2s of page load.
+  const nlTs = document.getElementById('newsletter-ts') as HTMLInputElement | null;
+  if (nlTs) nlTs.value = String(Date.now());
   nlForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData: Record<string, string> = {};
     new FormData(nlForm).forEach((v, k) => { formData[k] = String(v); });
     formData.naam = 'Nieuwsbrief aanmelding';
     formData.bericht = 'Aanmelding via homepage';
-    formData._ts = String(Date.now());
     try {
       const res = await fetch('https://forms.bollenstreekdigitaal.nl/api/v1/s/f_e6de503e1d49', {
         method: 'POST',
